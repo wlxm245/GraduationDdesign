@@ -1,6 +1,6 @@
 from pyspark.sql.types import Row, DoubleType, StructType, StructField
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, desc, unix_timestamp, lpad, concat_ws, when, expr
+from pyspark.sql.functions import col, desc, unix_timestamp, lpad, concat_ws, when, expr, countDistinct
 
 if __name__ == '__main__':
     spark = SparkSession.builder. \
@@ -24,6 +24,11 @@ if __name__ == '__main__':
     courier_feedback_df = spark.table("myhive.courier_feedback_clean")
     courier_report_df = spark.table("myhive.courier_report_clean")
 
+    print(f"总共订单为：{courier_report_df.count()}份")
+    print(f"城市数量：{courier_report_df.agg(countDistinct('city_id')).collect()[0][0]}")
+    print(f"外卖员数量：{courier_report_df.agg(countDistinct('courier_id')).collect()[0][0]}")
+    print(f"商家数量：{courier_report_df.agg(countDistinct('shop_id')).collect()[0][0]}")
+
     # 计算响应时间（以秒为单位）
     response_time_seconds = (col("feedback_hour") * 3600 + col("feedback_minute") * 60 + col("feedback_second")) - \
                             (col("acceptance_hour") * 3600 + col("acceptance_minute") * 60 + col("acceptance_second"))
@@ -37,7 +42,7 @@ if __name__ == '__main__':
 
     # 计算平均响应时间
     avg_response_time = courier_feedback_with_response_time_df.agg({"response_time_seconds": "avg"}).collect()[0][0]
-    print("平均响应时间: {:.2f} 秒".format(avg_response_time))
+    print("外卖员平均响应时间: {:.2f} 秒".format(avg_response_time))
 
     # 手动定义模式
     schema = StructType([
@@ -83,6 +88,7 @@ if __name__ == '__main__':
 
     # 添加工作时长列到 DataFrame
     courier_report_with_work_duration_df = courier_report_df.withColumn("work_duration_seconds", work_duration_seconds)
+    courier_report_with_work_duration_df.show()
 
     # 计算每个外卖员的平均工作时长（以秒为单位）
     avg_work_duration_seconds = courier_report_with_work_duration_df.groupBy("courier_id") \
@@ -117,6 +123,7 @@ if __name__ == '__main__':
                                                   .format(p10_order_count, p90_order_count,
                                                           p10_order_count, p90_order_count,
                                                           p10_order_count)))
+    courier_final.show()
 
     # 计算得分的平均值
     courier_final = courier_final.withColumn("final_score",

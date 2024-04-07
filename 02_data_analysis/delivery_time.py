@@ -42,7 +42,7 @@ if __name__ == '__main__':
     courier_report_df = courier_report_df.withColumn("delivery_time",
                                                      concat_ws(':', lpad(col("delivery_hour"), 2, '0'),
                                                                lpad(col("delivery_minute"), 2, '0'),
-                                                               lpad(col("delivery_second"), 2, '0')))
+                                                                lpad(col("delivery_second"), 2, '0')))
     # 将时间字符串转换为时间戳，并计算时间差（秒）
     courier_report_df = courier_report_df.withColumn("total_delivery_time_seconds",
                                                      (unix_timestamp(col("delivery_time"), "HH:mm:ss") - unix_timestamp(
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # 分析配送流程效率，例如计算平均配送时间
     average_delivery_time = courier_report_df.agg({"total_delivery_time_seconds": "avg"}).collect()[0][0]
-    print(f"平均配送时间: {average_delivery_time} 秒（{average_delivery_time / 60} 分钟）")
+    print(f"外卖员平均配送时间: {average_delivery_time} 秒（{average_delivery_time / 60} 分钟）")
 
     # 将平均配送时间写入Hive表
     spark.createDataFrame([(average_delivery_time, average_delivery_time / 60)],

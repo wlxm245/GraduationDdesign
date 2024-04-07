@@ -117,7 +117,7 @@ if __name__ == '__main__':
         ROW_NUMBER() OVER (PARTITION BY city_id ORDER BY COUNT(*) DESC) as rn
         FROM shop_view
         GROUP BY city_id, model
-        ) 
+        ) t
         WHERE t.rn = 1
         order by city_id ASC
         LIMIT 20
